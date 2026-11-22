@@ -1,0 +1,153 @@
+# Deterministic risk rules. Each rule has a `when` condition of one of these kinds:
+#   missing_clause:  {clause: <type>}                       – no clause of that type found
+#   term:            {key, field, op, value}                – compare a normalized term value
+#                    op: eq | ne | gt | lt | missing | true | false
+#   pattern:         {clause?: <type>, regex, unless?}      – regex found in clause (or whole text)
+#   absent_pattern:  {clause: <type>, regex}                – clause exists but regex NOT found
+#   text_without_clause: {regex, clause}                    – text mentions X but no clause of type
+#   text_absent:     {regex}                                – regex not found anywhere in the text
+# Optional: `applies_to` – list of contract types (default: all).
+# severity weights: critical 30, high 20, medium 10, low 4  → score capped at 100.
+
+rules:
+  - id: liability_cap_missing
+    category: liability
+    severity: high
+    when: {term: {key: liability_cap, field: present, op: "false"}}
+    message: "Liability cap is missing — standard is 1x fees"
+    suggestion: "Consider asking for a cap on liability equal to the fees paid in the prior 12 months (1x fees)."
+
+  - id: unlimited_liability
+    category: liability
+    severity: critical
+    when: {term: {key: liability_cap, field: unlimited, op: "true"}}
+    message: "Liability is expressly unlimited."
+    suggestion: "Negotiate a mutual liability cap (commonly 1x annual fees) with narrow carve-outs."
+
+  - id: consequential_damages_not_excluded
+    category: liability
+    severity: medium
+    when: {absent_pattern: {clause: liability, regex: "consequential|indirect|lost profits|special damages"}}
+    message: "Liability clause does not exclude indirect or consequential damages."
+    suggestion: "Add a mutual exclusion of indirect, consequential and lost-profit damages."
+
+  - id: indemnification_broad
+    category: indemnification
+    severity: high
+    when:
+      pattern:
+        clause: indemnification
+        regex: "any and all|all claims|howsoever arising|regardless of (?:fault|negligence|cause)|its own negligence|arising out of or relating to"
+        unless: "to the extent (?:caused|arising) (?:by|from)|except to the extent"
+    message: "This indemnification clause is unusually broad."
+    suggestion: "Limit indemnity to third-party claims caused by the indemnifying party's breach, negligence or misconduct."
+
+  - id: indemnification_one_sided
+    category: indemnification
+    severity: medium
+    when: {absent_pattern: {clause: indemnification, regex: "each party|mutual|mutually|either party|the other party shall indemnify"}}
+    message: "Indemnification appears to be one-sided."
+    suggestion: "Ask for mutual indemnification obligations."
+
+  - id: missing_termination
+    category: termination
+    severity: high
+    when: {missing_clause: {clause: termination}}
+    message: "No termination clause found."
+    suggestion: "Add termination rights for material breach (with a cure period) and for convenience."
+
+  - id: no_termination_for_convenience
+    category: termination
+    severity: low
+    when: {absent_pattern: {clause: termination, regex: "convenience|for any reason|without cause|at any time upon"}}
+    message: "No right to terminate for convenience."
+    suggestion: "Consider asking for a right to terminate for convenience on 30–60 days' notice."
+
+  - id: unilateral_termination
+    category: termination
+    severity: medium
+    when: {pattern: {clause: termination, regex: "(?:sole|absolute) discretion|immediately without (?:prior )?notice|without notice"}}
+    message: "Counterparty may terminate at its sole discretion or without notice."
+    suggestion: "Require written notice and a reasonable cure period before termination."
+
+  - id: missing_confidentiality
+    category: confidentiality
+    severity: medium
+    when: {missing_clause: {clause: confidentiality}}
+    applies_to: ["Service Agreement", "Master Services Agreement", "Consulting Agreement", "SaaS / Subscription Agreement", "Software License Agreement", "Employment Agreement", "Data Processing Agreement"]
+    message: "No confidentiality clause found."
+    suggestion: "Add mutual confidentiality obligations surviving termination for at least 2–3 years."
+
+  - id: confidentiality_perpetual
+    category: confidentiality
+    severity: low
+    when: {pattern: {clause: confidentiality, regex: "perpetu|in perpetuity|indefinitely"}}
+    message: "Confidentiality obligations last indefinitely."
+    suggestion: "Consider a fixed survival period (e.g. 3–5 years), except for trade secrets."
+
+  - id: auto_renew
+    category: renewal
+    severity: low
+    when: {term: {key: auto_renew, field: auto_renew, op: "true"}}
+    message: "Contract renews automatically — track the non-renewal notice deadline."
+    suggestion: "Calendar the notice deadline or ask for renewal only by mutual written agreement."
+
+  - id: long_renewal_notice
+    category: renewal
+    severity: medium
+    when: {term: {key: notice_period, field: days, op: gt, value: 60}}
+    message: "Notice period is unusually long (more than 60 days)."
+    suggestion: "Negotiate the notice period down to 30 days."
+
+  - id: missing_governing_law
+    category: governing_law
+    severity: medium
+    when: {term: {key: governing_law, op: missing}}
+    message: "No governing law specified."
+    suggestion: "Specify a governing law and venue you are comfortable litigating in."
+
+  - id: missing_dispute_resolution
+    category: dispute_resolution
+    severity: low
+    when: {text_absent: {regex: "arbitrat|mediat|dispute|jurisdiction of the courts|exclusive jurisdiction|submit to the (?:exclusive )?jurisdiction|courts? (?:of|located in)"}}
+    message: "No dispute resolution mechanism (courts, mediation or arbitration) is defined."
+    suggestion: "Add an escalation and dispute-resolution procedure."
+
+  - id: unilateral_amendment
+    category: general
+    severity: high
+    when: {pattern: {regex: "may (?:amend|modify|change|update) (?:this agreement|these terms|the terms|any terms)[^.]{0,100}(?:at any time|sole discretion|without (?:prior )?(?:notice|consent))"}}
+    message: "Counterparty can change the terms unilaterally."
+    suggestion: "Require that amendments be in writing and signed by both parties."
+
+  - id: missing_data_protection
+    category: data_protection
+    severity: medium
+    when: {text_without_clause: {regex: "personal (?:data|information)|PII|data subject", clause: data_protection}}
+    message: "Personal data is referenced but there is no data-protection clause."
+    suggestion: "Add data-protection terms (or a DPA) covering security, breach notice and sub-processors."
+
+  - id: broad_ip_assignment
+    category: intellectual_property
+    severity: medium
+    when:
+      pattern:
+        clause: intellectual_property
+        regex: "(?:all|any) (?:right, title and interest|intellectual property)[^.]{0,150}(?:assign|transfer|vest)"
+        unless: "pre-existing|background|retain(?:s)? (?:all )?(?:right|ownership)"
+    message: "IP assignment is broad and does not carve out pre-existing IP."
+    suggestion: "Carve out pre-existing/background IP and general know-how; license rather than assign where possible."
+
+  - id: non_compete
+    category: non_compete
+    severity: medium
+    when: {pattern: {clause: non_compete, regex: "not (?:to )?(?:compete|engage|solicit)|non-?compet"}}
+    message: "Contains non-compete / non-solicitation restrictions."
+    suggestion: "Narrow the scope, geography and duration (e.g. 12 months) of restrictive covenants."
+
+  - id: late_payment_interest_high
+    category: payment
+    severity: low
+    when: {pattern: {clause: payment, regex: "(?:[2-9]|1\\.[6-9]|\\d{2})(?:\\.\\d+)?\\s*%\\s*(?:per|a|each)\\s*month"}}
+    message: "Late-payment interest above 1.5% per month."
+    suggestion: "Ask to reduce late-payment interest to 1% per month or the statutory rate."

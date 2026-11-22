@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens as RGB channels so Tailwind opacity modifiers work (bg-brand/10). */
+:root {
+  color-scheme: light;
+  --page: 246 247 251;
+  --surface: 255 255 255;
+  --surface-2: 248 250 252;
+  --ink: 15 23 42;
+  --ink-2: 71 85 105;
+  --muted: 137 135 129;
+  --line: 226 232 240;
+  --track: 225 224 217;
+  --brand: 79 70 229;
+  --brand-2: 124 58 237;
+  --brand-soft: 238 242 255;
+  --series-1: 42 120 214; /* #2a78d6 sequential blue */
+  /* status palette (fixed): good / warning / serious / critical */
+  --good: 12 163 12;
+  --warning: 250 178 25;
+  --serious: 236 131 90;
+  --critical: 208 59 59;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: 11 13 18;
+  --surface: 20 23 31;
+  --surface-2: 26 30 40;
+  --ink: 236 239 245;
+  --ink-2: 168 175 190;
+  --muted: 137 135 129;
+  --line: 40 45 58;
+  --track: 44 44 42;
+  --brand: 129 140 248;
+  --brand-2: 167 139 250;
+  --brand-soft: 30 32 60;
+  --series-1: 57 135 229; /* #3987e5 dark step */
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-page text-ink;
+  }
+  ::selection {
+    @apply bg-brand/20;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand/60 ring-offset-2 ring-offset-page;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted
+      focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium text-ink-2;
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line)) transparent;
+}

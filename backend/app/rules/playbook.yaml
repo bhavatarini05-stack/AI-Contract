@@ -1,0 +1,33 @@
+# Standard negotiating positions per category, used for negotiation suggestions
+# (merged with the per-rule `suggestion` and optional local-LLM advice).
+positions:
+  liability:
+    standard: "Mutual cap equal to 1x fees paid in the 12 months preceding the claim; exclusion of indirect damages."
+    ask: "Consider asking for a cap on liability (1x annual fees) and a mutual exclusion of consequential damages."
+  indemnification:
+    standard: "Mutual indemnity limited to third-party claims for IP infringement, gross negligence or wilful misconduct."
+    ask: "Narrow indemnification to third-party claims and make it mutual."
+  termination:
+    standard: "Termination for material breach with 30-day cure; termination for convenience on 30–60 days' notice."
+    ask: "Request a termination-for-convenience right and a cure period for breaches."
+  renewal:
+    standard: "Renewal by mutual written agreement, or auto-renewal with ≤30 days' non-renewal notice."
+    ask: "Shorten the non-renewal notice to 30 days or require mutual agreement to renew."
+  confidentiality:
+    standard: "Mutual obligations surviving 3–5 years post-termination (trade secrets indefinitely)."
+    ask: "Make confidentiality mutual with a defined survival period."
+  intellectual_property:
+    standard: "Customer owns deliverables; vendor retains pre-existing IP and grants a licence to it."
+    ask: "Carve out pre-existing IP and secure a licence to anything you need to use the deliverables."
+  payment:
+    standard: "Net 30 payment terms; late interest ≤1% per month; fee increases capped (e.g. CPI or 5%)."
+    ask: "Seek Net 30–45 payment terms and a cap on annual price increases."
+  data_protection:
+    standard: "GDPR/CCPA-compliant DPA, 72-hour breach notification, sub-processor approval."
+    ask: "Attach a data processing agreement with breach-notice and security obligations."
+  governing_law:
+    standard: "Your home jurisdiction, or a neutral one with exclusive venue."
+    ask: "Propose your home jurisdiction as governing law and venue."
+  general:
+    standard: "Amendments only in a writing signed by both parties."
+    ask: "Require written, mutually signed amendments."

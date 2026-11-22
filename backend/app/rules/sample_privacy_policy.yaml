@@ -1,0 +1,37 @@
+name: Data Privacy Policy (sample)
+description: >
+  Sample internal data-privacy policy. Edit or replace via the Policies page/API.
+rules:
+  - id: dp_clause_present
+    requirement: The contract must contain data-protection / privacy obligations.
+    clause_types: [data_protection, confidentiality]
+    must_include: ["personal data|personal information|data protection|privacy"]
+    severity: high
+  - id: dp_breach_notification
+    requirement: Vendor must notify us of a personal-data breach within 72 hours.
+    clause_types: [data_protection]
+    must_include: ["breach", "(?:72|seventy-two)\\s*(?:\\(\\d+\\)\\s*)?hours|without undue delay"]
+    severity: high
+  - id: dp_law_compliance
+    requirement: Processing must comply with applicable data protection laws (e.g. GDPR, CCPA, DPDP Act).
+    clause_types: [data_protection]
+    must_include: ["GDPR|General Data Protection Regulation|CCPA|applicable data protection law|Digital Personal Data Protection"]
+    severity: medium
+  - id: dp_no_sale
+    requirement: Vendor must not sell or use personal data for its own purposes.
+    must_not_include: ["may (?:sell|monetize|use) (?:any )?(?:customer |personal )?data for (?:its|their) own"]
+    severity: high
+  - id: dp_return_deletion
+    requirement: Personal data must be returned or deleted at the end of the contract.
+    clause_types: [data_protection, termination, confidentiality]
+    must_include: ["(?:return|delete|destroy)[^.]{0,80}(?:data|information|materials)"]
+    severity: medium
+  - id: dp_subprocessors
+    requirement: Use of sub-processors requires our prior consent or notice.
+    clause_types: [data_protection]
+    severity: medium
+  - id: dp_security_measures
+    requirement: Vendor must maintain appropriate technical and organisational security measures.
+    clause_types: [data_protection, confidentiality]
+    must_include: ["security measures|technical and organi[sz]ational|industry[- ]standard security|encrypt"]
+    severity: medium

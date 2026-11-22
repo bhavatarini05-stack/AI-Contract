@@ -1,0 +1,136 @@
+================================================================================
+  ClauseLens - AI Contract Analyzer
+  Quick reference: what this project is + how to run it
+================================================================================
+
+
+PART A - PROJECT IN SHORT NOTES
+--------------------------------------------------------------------------------
+
+WHAT IT IS
+  - A web app that reads a contract (PDF) and reviews it automatically with AI.
+  - Upload a contract -> get key clauses, key terms, risk flags, a risk score,
+    a plain-English summary, deadlines and negotiation tips.
+  - 100% free: uses open-source AI models running locally (Ollama).
+    No paid APIs, no API keys, documents never leave the computer.
+
+PROBLEM IT SOLVES
+  - Reading long legal contracts is slow and errors are costly.
+  - The app speeds up the first review: it finds missing/risky clauses and
+    important dates so a human can focus on what matters.
+  - It is NOT legal advice - it assists a human reviewer.
+
+MAIN FEATURES
+  1. Clause extraction       - finds termination, liability, indemnification,
+                               confidentiality, renewal, payment, IP, data
+                               protection ... clauses (with page numbers)
+  2. Term normalization      - "twelve (12) months" -> 12 months
+                               e.g. Term: 12 months, Auto-renew: Yes, Notice: 60 days
+  3. Risk flagging + score   - e.g. "Liability cap is missing - standard is 1x fees"
+                               "This indemnification clause is unusually broad"
+                               Overall score 0-100 (Low / Medium / High / Critical)
+  4. Plain-language summary  - "Explain this contract in simple terms"
+  5. Template comparison     - differences vs the company's standard template
+  6. Compliance checking     - pass / fail / needs review against a policy
+                               (sample Data Privacy Policy included)
+  7. Obligation tracking     - "Renewal notice must be sent by Nov 15, 2026"
+  8. Expiry alerts           - "This contract expires in 30 days" (daily scan)
+  9. Negotiation suggestions - "Consider asking for a cap on liability"
+ 10. Integrations (optional) - Google Drive, DocuSign, Dropbox Sign (HelloSign),
+                               Adobe Sign - free sandbox/test modes only, OFF by default
+
+AI / NLP FEATURES
+  - Legal entity recognition   : parties + roles, governing law, dates, amounts
+  - Contract type classification: Service Agreement, NDA, Lease, SaaS, ...
+  - Risk scoring               : YAML rules (deterministic) + local LLM review
+                                 (AI-found issues count at half weight)
+  - Term extraction & normalization
+
+PIPELINE (how a contract is processed)
+  Upload -> Text extraction (PyMuPDF) -> OCR if scanned (Tesseract)
+         -> Language detection -> Contract type classification
+         -> Entity recognition -> Section split -> Clause extraction
+         -> Term normalization -> Risk analysis (rules + LLM)
+         -> Obligations & deadlines -> Summary + negotiation tips -> Report
+
+  Design idea ("hybrid"): reliable code does what it can (regex, date math,
+  rules, diffs); the local LLM does the judgement parts (unusual wording,
+  summaries, advice). If the LLM is off, the app still works rule-based.
+
+EDGE CASES HANDLED
+  - Scanned PDFs           -> image clean-up (deskew/denoise) + Tesseract OCR,
+                              warning when OCR confidence is low
+  - Handwritten amendments -> TrOCR model (optional), marked "needs review"
+  - Multiple languages     -> language detection; Spanish/French/German rules;
+                              multilingual LLM
+
+TECH STACK (all free / open source)
+  Backend   : Python 3.11+, FastAPI, SQLAlchemy, SQLite, APScheduler
+  AI        : Ollama (current model: llama3.2; better: qwen2.5:7b-instruct)
+  Documents : PyMuPDF, Tesseract OCR, OpenCV, TrOCR (optional)
+  Frontend  : React 18, TypeScript, Vite, Tailwind CSS, TanStack Query,
+              lucide-react icons
+  Quality   : pytest (47 tests), ruff lint/format, GitHub Actions CI,
+              pre-commit hooks (incl. secret detection)
+
+FOLDER STRUCTURE
+  backend/app/api/           REST API endpoints
+  backend/app/pipeline/      the analysis pipeline (one file per stage)
+  backend/app/llm/           LLM interface: Ollama + mock (for tests)
+  backend/app/integrations/  Google Drive / e-signature clients
+  backend/app/rules/         risk_rules.yaml, playbook.yaml, sample policy
+  backend/tests/             automated tests (synthetic contracts only)
+  backend/scripts/           make_samples.py (creates demo PDFs)
+  frontend/src/pages/        UI screens (Dashboard, Contracts, Upload, ...)
+  frontend/src/components/   reusable UI pieces, charts, panels
+  templates/                 standard contract template(s)
+  storage/                   uploaded files (not committed to git)
+  docs/screenshots/          screenshots used in README
+  start-backend.bat          one-click backend start
+  start-frontend.bat         one-click frontend start
+
+LOGIN & ROLES
+  - Login / Register pages; passwords hashed with bcrypt, sessions via JWT
+    in an HttpOnly cookie (12 hours).
+  - The FIRST account you register becomes the ADMIN.
+  - User  : sees and manages only their own contracts, deadlines, alerts.
+  - Admin : everything a user can do + Admin overview (org-wide stats),
+            Users (add, change role, enable/disable, reset password, delete),
+            All contracts (with owner), edit Templates/Policies, integrations.
+
+APP SCREENS
+  Dashboard    - stats, risk distribution, contract types, deadlines, alerts
+  Contracts    - list with search, filters and sorting
+  Upload       - drag & drop PDF, see the pipeline
+  Contract page- risk score, key terms, tabs: Summary / Risks / Clauses /
+                 Compare / Compliance / Obligations / Sign & share, PDF viewer
+  Obligations  - timeline of all deadlines, mark done/dismiss
+  Templates    - manage standard templates
+  Policies     - manage compliance rules (JSON)
+  Settings     - AI/OCR status, integrations
+  Dark/light mode toggle (top-right), Ctrl+K to search contracts
+
+
+PART B - HOW TO RUN (every time, in PowerShell)
+--------------------------------------------------------------------------------
+
+Make sure the Ollama app is running (llama icon in the system tray).
+
+TERMINAL 1 - Backend
+    cd "C:\Users\victus\Downloads\AI Contract"
+    .\start-backend.bat
+
+TERMINAL 2 - Frontend
+    cd "C:\Users\victus\Downloads\AI Contract"
+    .\start-frontend.bat
+
+Open the URL printed in Terminal 2 (http://localhost:5173 or 5174) in the browser.
+First time only: click "Create one" and register - that account is the admin.
+After that just sign in with your email and password.
+
+To stop: press Ctrl + C in both terminals.
+
+
+================================================================================
+  Disclaimer: AI-generated analysis is not legal advice.
+================================================================================

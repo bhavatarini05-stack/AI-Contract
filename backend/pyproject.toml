@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contract-analyzer"
+version = "0.1.0"
+description = "AI contract analysis with free, local open-source models (Ollama)"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "python-multipart>=0.0.9",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "sqlalchemy>=2.0",
+  "httpx>=0.27",
+  "pyyaml>=6.0",
+  "pymupdf>=1.24",
+  "pytesseract>=0.3.10",
+  "pillow>=10.0",
+  "dateparser>=1.2",
+  "python-dateutil>=2.9",
+  "apscheduler>=3.10,<4",
+  "cryptography>=42",
+  "email-validator>=2.1",
+  "bcrypt>=4.1",
+  "pyjwt>=2.8",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+nlp = ["spacy>=3.7", "lingua-language-detector>=2.0"]
+vision = ["opencv-python-headless>=4.9", "transformers>=4.44", "torch>=2.3"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["rules/*.yaml", "llm/prompts/*.txt"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]  # long regexes/prompts; formatting handled by ruff format
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["ollama: requires a running local Ollama server (skipped in CI)"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query"]
